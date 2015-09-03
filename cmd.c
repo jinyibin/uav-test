@@ -125,14 +125,16 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
  	char file_head[128];
  	int i=0;
     FILE *fp;
-    uint16 id;
+    uint32 id;
     float  v;
     double Long;
     double lat;
     float  h;
-    unsigned char   task;
+    uint32   task;
     uint8 data[4096];
     uint32 frame_size;
+    uint32 total_wp_num;
+    uint32  wp_num_of_this_frame;
 
     fp=fopen("wp_init.csv","r");
     if(fp==NULL){
@@ -140,20 +142,22 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
     	printf("----|sending waypoint failed\n");
     }
     //read out file information
+    fscanf(fp,"%s,%s",file_head+60,file_head+70);
+    fscanf(fp,"%d,%d",&total_wp_num,&wp_num_of_this_frame);
     fscanf(fp,"%s,%s,%s,%s,%s,%s",file_head,file_head+10,file_head+20,file_head+30,file_head+40,file_head+50);
     //read data
     while(fscanf(fp,"%d,%f,%lf,%lf,%f,%x",&id,&v,&Long,&lat,&h,&task)==6){
-    	*(uint16*)(data+i*27) = id;
+    	*(uint16*)(data+i*27) = (uint16)id;
     	*(float*)(data+2+i*27)  = v;
     	*(double*)(data+6+i*27)  = Long;
     	*(double*)(data+14+i*27)  = lat;
     	*(float*)(data+22+i*27)  = h;
-    	*(uint8*)(data+26+i*27)  = task;
+    	*(uint8*)(data+26+i*27)  = (uint8)task;
     	i++;
     	printf("----|%2d,%8f,%lf,%lf,%8f,%2x\n",id,v,Long,lat,h,task);
 
     }
-    frame_size = i+14;
+    frame_size = i*27+17;
  	buf[0] = CTRL_FRAME_START1;
  	buf[1] = CTRL_FRAME_START2;
  	buf[2] = plane_id&0xFF;
@@ -162,18 +166,20 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
 	buf[8] = 1;
 	buf[9] = 1;
 	buf[10] = CTRL_FRAME_TYPE_WAYPOINT_INIT;
-    memcpy(buf+11,data,i*27);
+	*(uint16*)(buf+11) = (uint16)total_wp_num;
+	buf[13] = (uint8)wp_num_of_this_frame;
+    memcpy(buf+14,data,i*27);
  	crc_value = crc_checksum16(buf, frame_size-3);
  	buf[frame_size-3] = crc_value&0xFF;
  	buf[frame_size-2] = crc_value>>8;
  	buf[frame_size-1] = CTRL_FRAME_END;
  	memcpy(frame_wait_answer,buf,frame_size);
- 	/*
+
  	printf("----|");
  	for( i=0;i<frame_size;i++)
  		printf("%2x ",frame_wait_answer[i]);
  	printf("\n");
- 	*/
+
  	control_cmd_send(frame_wait_answer, frame_size);
  	printf("----|waiting for answer.....................\n");
  }
@@ -185,15 +191,16 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
   	char file_head[128];
 
      FILE *fp;
-     uint8 m_type;
-     uint16 id;
+     uint32 m_type;
+     uint32 id;
      float  v;
      double Long;
      double lat;
      float  h;
-     unsigned char   task;
+     uint32   task;
      uint8 data[32];
      uint32 frame_size;
+     int i=0;
 
      fp=fopen("wp_modify.csv","r");
      if(fp==NULL){
@@ -203,14 +210,14 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
      //read out file information
      fscanf(fp,"%s,%s,%s,%s,%s,%s,%s",file_head,file_head+10,file_head+20,file_head+30,file_head+40,file_head+50,file_head+60);
      // read data
-     while(fscanf(fp,"%x,%d,%f,%lf,%lf,%f,%x",&m_type,&id,&v,&Long,&lat,&h,&task)==7){
-    	 *(uint8*)(data) = m_type;
+     while(fscanf(fp,"%d,%d,%f,%lf,%lf,%f,%d",&m_type,&id,&v,&Long,&lat,&h,&task)==7){
+    	 *(uint8*)(data) = (uint8)m_type;
      	*(uint16*)(data+1) = id;
      	*(float*)(data+3)  = v;
      	*(double*)(data+7)  = Long;
      	*(double*)(data+15)  = lat;
      	*(float*)(data+23)  = h;
-     	*(uint8*)(data+27)  = task;
+     	*(uint8*)(data+27)  = (uint8)task;
      	*(uint32*)(data+28)  = 0;
      	printf("----|%2x,%2d,%8f,%lf,%lf,%8f,%2x\n",m_type,id,v,Long,lat,h,task);
 
@@ -223,19 +230,19 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
   	*(uint32*)(buf+4) = frame_size;
  	buf[8] = 1;
  	buf[9] = 1;
- 	buf[10] = CTRL_FRAME_TYPE_WAYPOINT_INIT;
+ 	buf[10] = CTRL_FRAME_TYPE_WAYPOINT_MODIFY;
      memcpy(buf+11,data,32);
   	crc_value = crc_checksum16(buf, frame_size-3);
   	buf[frame_size-3] = crc_value&0xFF;
   	buf[frame_size-2] = crc_value>>8;
   	buf[frame_size-1] = CTRL_FRAME_END;
   	memcpy(frame_wait_answer,buf,frame_size);
-  	/*
+
   	printf("----|");
   	for( i=0;i<frame_size;i++)
   		printf("%2x ",frame_wait_answer[i]);
   	printf("\n");
-  	*/
+
   	control_cmd_send(frame_wait_answer, frame_size);
   	printf("----|waiting for answer.....................\n");
   }
@@ -269,7 +276,33 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
 
 	 	control_cmd_send(buf, 30);
   }
+  void link_test()
+   {
+   	uint16 crc_value;
+   	uint8  buf[18];
+   	int i=0;
 
+   	buf[0] = CTRL_FRAME_START1;
+   	buf[1] = CTRL_FRAME_START2;
+   	buf[2] = plane_id&0xFF;
+   	buf[3] = plane_id>>8;
+   	*(uint32*)(buf+4) = 0x12;
+  	buf[8] = 1;
+  	buf[9] = 1;
+   	buf[10] = CTRL_FRAME_TYPE_LINK_TEST ;
+   	*(uint32*)(buf+11) = 1;
+   	crc_value = crc_checksum16(buf, 15);
+   	buf[15] = crc_value&0xFF;
+   	buf[16] = crc_value>>8;
+   	buf[17] = CTRL_FRAME_END;
+
+   	printf("----|");
+   	for( i=0;i<15;i++)
+   		printf("%2x ",buf[i]);
+   	printf("\n");
+   	control_cmd_send(buf, 18);
+
+   }
 
 
 

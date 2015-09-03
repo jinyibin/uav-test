@@ -21,6 +21,8 @@ void how_to_use()
   printf("stop       : stop the sending data,but not exit  \n");
   printf("help       : show you command list\n");
   printf("servo test : send servo test command\n");
+  printf("link  test : send link test command\n");
+  printf("joystick   : send joystick data\n");
   printf("version    : read version of app,kernel,board and FPGA etc\n");
   printf("take off   : send plane take off command list\n");
   printf("remote1    : set plane into remote mode1\n");
@@ -193,7 +195,7 @@ int main( int argc,char *argv[])
         }
         if(strcmp(command,"link test")==0){
            	printf("----|sending link test command :\n");
-            send_control_cmd(CTRL_FRAME_TYPE_LINK_TEST);
+            link_test();
         	continue;
         }
         if(strcmp(command,"joystick")==0){

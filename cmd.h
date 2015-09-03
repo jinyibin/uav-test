@@ -36,7 +36,7 @@
 
 /* frame from gound  */
 #define CTRL_FRAME_TYPE_HELI_CONFIG      0x38        // heli configure including heli type,oil volume etc.
-#define CTRL_FRAME_TYPE_WAYPPOINT_MODIFY 0x8B        // modify way point
+#define CTRL_FRAME_TYPE_WAYPOINT_MODIFY 0x8B        // modify way point
 #define CTRL_FRAME_TYPE_FLY_PARA1        0x33        // set flying parameter1
 #define CTRL_FRAME_TYPE_FLY_PARA2        0x3E        // set flying parameter2
 #define CTRL_FRAME_TYPE_FIRM_UPDATE      0xFF        // update firmware
@@ -127,6 +127,7 @@ void send_cmd_confirm(uint8 data);
 void send_joystick_data();
 void send_way_point();
 void way_point_modify();
+void link_test();
 
 
 #endif
