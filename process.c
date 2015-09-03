@@ -66,16 +66,19 @@ static int frame_compare(uint16 frame_size,uint8 *cmd,uint8 *answer)
 {
   int i=0;
   printf("----|receive answer from air:");
-  for(i=0;i<frame_size;i++){
-     printf("%2x",answer[i]);
-  }
-  printf("\n");
+  if(frame_size<30){
+      for(i=0;i<frame_size;i++){
+         printf("%2x",answer[i]);
+      }
+      printf("\n");
 
-  printf("----|the command  we sent is:");
-  for(i=0;i<frame_size;i++){
-     printf("%2x",cmd[i]);
+
+      printf("----|the command  we sent is:");
+      for(i=0;i<frame_size;i++){
+          printf("%2x",cmd[i]);
+      }
+      printf("\n");
   }
-  printf("\n");
   for(i=0;i<frame_size;i++){
      if(cmd[i]!=answer[i])
     	 return -1;
@@ -344,7 +347,7 @@ static void *sensor_data_collect()
 
 
 	unsigned int data_len = 0;
-	int maxfd = 0;
+
 	fd_set rfds;
 
 	unsigned char buf_ctrl[BUF_SIZE_CTRL];        // buffer to store raw control frame data
@@ -390,4 +393,6 @@ int control_cmd_send(uint8 *buf,uint32 buf_size)
 	return serial_write(control_fd, buf, buf_size);
 
 }
+
+
 

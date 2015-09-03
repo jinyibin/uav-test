@@ -53,7 +53,7 @@
 #define CTRL_FRAME_TYPE_CMD_CONFIRM      0x80
 #define CTRL_FRAME_TYPE_STICK_DATA       0xD6        // data from joystick
 #define CTRL_FRAME_TYPE_LINK_TEST        0x69
-#define CTRL_FRAME_TYPE_EXPORT_DATA      0x00
+#define CTRL_FRAME_TYPE_EXPORT_DATA      0x86
 /* frame to the ground   */
 #define CTRL_FRAME_TYPE_FLY_STATUS       0x55
 #define CTRL_FRAME_TYPE_ERROR            0x41
@@ -124,6 +124,9 @@ typedef struct flying_status_s {
 void flying_status_parse(uint8 *data,flying_status_s *flying_status);
 void send_control_cmd(uint8 data);
 void send_cmd_confirm(uint8 data);
+void send_joystick_data();
+void send_way_point();
+void way_point_modify();
 
 
 #endif

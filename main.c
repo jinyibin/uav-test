@@ -3,16 +3,22 @@
 #include <stdlib.h>
 #include "datatype.h"
 #include "cmd.h"
+#include <pthread.h>
 
 #include "process.h"
 #include "serial.h"
 
 #include <unistd.h>
 
+pthread_t send_data;
+int joystick_test=0;
+int running=0;
+
 void how_to_use()
 {
   printf("-------------------command list------------------\n");
   printf("exit       : save the data and exit the program \n");
+  printf("stop       : stop the sending data,but not exit  \n");
   printf("help       : show you command list\n");
   printf("servo test : send servo test command\n");
   printf("version    : read version of app,kernel,board and FPGA etc\n");
@@ -26,9 +32,12 @@ void how_to_use()
   printf("config     : configure the auto pilot system,like heli type,oil volume,max speed etc\n");
   printf("para set1  : set the parameter1 of auto pilot system\n");
   printf("para set2  : set the parameter2 of auto pilot system\n");
-  printf("wp modify  : modify the way point\n");
-  printf("wp init    : initialize the way point\n");
+  printf("wp modify  : modify the way point,add data in the wp_modify.csv\n");
+  printf("             format:m_type,id,v,Long,lat,h,task\n");
+  printf("wp init    : initialize the way point,add data in the wp_ini.csv\n");
+  printf("             format:id,v,Long,lat,h,task\n");
   printf("firmware   : update the firmware\n");
+  printf("export     : export data\n");
 }
 
 void file_fly_status_init()
@@ -46,6 +55,19 @@ void file_fly_status_init()
    fprintf(fp_fly_status,"fly_status,gps_s,imu_s,cpu_s,voltage,engine,cpu_t,rsv\n");
 }
 
+void *send_data_periodly()
+{
+    while(running){
+	    if(joystick_test==1){
+            send_joystick_data();
+        }
+        usleep(20000);
+    }
+    return 0;
+
+}
+
+
 
 
 int main( int argc,char *argv[])
@@ -54,6 +76,7 @@ int main( int argc,char *argv[])
 	char *dev=buf;
 	char *command;
 	int ret;
+
 
     printf("please enter the COM name,enter 'y' to use default /dev/ttyUSB0:");
     fgets(buf,40,stdin);
@@ -92,6 +115,8 @@ int main( int argc,char *argv[])
     	return 0;
     }
     file_fly_status_init();
+    running =1;
+   	pthread_create(&send_data, NULL, send_data_periodly, NULL);
 	while (1) {
 
 		fgets(buf,40,stdin);
@@ -116,6 +141,12 @@ int main( int argc,char *argv[])
         	send_control_cmd(CTRL_FRAME_TYPE_TAKEOFF);
         	continue;
         }
+
+        if(strcmp(command,"export")==0){
+                	printf("----|sending export data command :\n");
+                	send_control_cmd(CTRL_FRAME_TYPE_EXPORT_DATA);
+                	continue;
+                }
 
 
         if(strcmp(command,"hover")==0){
@@ -161,15 +192,29 @@ int main( int argc,char *argv[])
         	continue;
         }
         if(strcmp(command,"link test")==0){
-
+           	printf("----|sending link test command :\n");
+            send_control_cmd(CTRL_FRAME_TYPE_LINK_TEST);
         	continue;
         }
         if(strcmp(command,"joystick")==0){
+           	printf("----|sending joystick data,enter 'stop' to stop the sending.... :\n");
+           	joystick_test=1;
 
         	continue;
         }
-        if(strcmp(command,"way point")==0){
 
+        if(strcmp(command,"wp init")==0){
+           	printf("----|sending waypoint... :\n");
+           	send_way_point();
+        	continue;
+        }
+        if(strcmp(command,"wp modify")==0){
+           	printf("----|sending waypoint modify command... :\n");
+           	way_point_modify();
+        	continue;
+        }
+        if(strcmp(command,"stop")==0){
+            joystick_test=0;
         	continue;
         }
 
@@ -184,6 +229,9 @@ int main( int argc,char *argv[])
 	com_close();
 	fclose(fp_fly_status);
 	fclose(fp_fly_status_raw);
+	void* result = NULL;
+	running = 0;
+	pthread_join(send_data,&result);
 
 	exit(0);
 	return 0;

@@ -118,6 +118,158 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
  	printf("----|waiting for answer.....................\n");
  }
 
+  void send_way_point()
+ {
+ 	uint16 crc_value;
+ 	uint8  buf[4096];
+ 	char file_head[128];
+ 	int i=0;
+    FILE *fp;
+    uint16 id;
+    float  v;
+    double Long;
+    double lat;
+    float  h;
+    unsigned char   task;
+    uint8 data[4096];
+    uint32 frame_size;
+
+    fp=fopen("wp_init.csv","r");
+    if(fp==NULL){
+    	printf("----|can not open file:wp_init.csv\n");
+    	printf("----|sending waypoint failed\n");
+    }
+    //read out file information
+    fscanf(fp,"%s,%s,%s,%s,%s,%s",file_head,file_head+10,file_head+20,file_head+30,file_head+40,file_head+50);
+    //read data
+    while(fscanf(fp,"%d,%f,%lf,%lf,%f,%x",&id,&v,&Long,&lat,&h,&task)==6){
+    	*(uint16*)(data+i*27) = id;
+    	*(float*)(data+2+i*27)  = v;
+    	*(double*)(data+6+i*27)  = Long;
+    	*(double*)(data+14+i*27)  = lat;
+    	*(float*)(data+22+i*27)  = h;
+    	*(uint8*)(data+26+i*27)  = task;
+    	i++;
+    	printf("----|%2d,%8f,%lf,%lf,%8f,%2x\n",id,v,Long,lat,h,task);
+
+    }
+    frame_size = i+14;
+ 	buf[0] = CTRL_FRAME_START1;
+ 	buf[1] = CTRL_FRAME_START2;
+ 	buf[2] = plane_id&0xFF;
+ 	buf[3] = plane_id>>8;
+ 	*(uint32*)(buf+4) = frame_size;
+	buf[8] = 1;
+	buf[9] = 1;
+	buf[10] = CTRL_FRAME_TYPE_WAYPOINT_INIT;
+    memcpy(buf+11,data,i*27);
+ 	crc_value = crc_checksum16(buf, frame_size-3);
+ 	buf[frame_size-3] = crc_value&0xFF;
+ 	buf[frame_size-2] = crc_value>>8;
+ 	buf[frame_size-1] = CTRL_FRAME_END;
+ 	memcpy(frame_wait_answer,buf,frame_size);
+ 	/*
+ 	printf("----|");
+ 	for( i=0;i<frame_size;i++)
+ 		printf("%2x ",frame_wait_answer[i]);
+ 	printf("\n");
+ 	*/
+ 	control_cmd_send(frame_wait_answer, frame_size);
+ 	printf("----|waiting for answer.....................\n");
+ }
+
+  void way_point_modify()
+  {
+  	uint16 crc_value;
+  	uint8  buf[128];
+  	char file_head[128];
+
+     FILE *fp;
+     uint8 m_type;
+     uint16 id;
+     float  v;
+     double Long;
+     double lat;
+     float  h;
+     unsigned char   task;
+     uint8 data[32];
+     uint32 frame_size;
+
+     fp=fopen("wp_modify.csv","r");
+     if(fp==NULL){
+     	printf("----|can not open file:wp_modify.csv\n");
+     	printf("----|sending waypoint modify command failed\n");
+     }
+     //read out file information
+     fscanf(fp,"%s,%s,%s,%s,%s,%s,%s",file_head,file_head+10,file_head+20,file_head+30,file_head+40,file_head+50,file_head+60);
+     // read data
+     while(fscanf(fp,"%x,%d,%f,%lf,%lf,%f,%x",&m_type,&id,&v,&Long,&lat,&h,&task)==7){
+    	 *(uint8*)(data) = m_type;
+     	*(uint16*)(data+1) = id;
+     	*(float*)(data+3)  = v;
+     	*(double*)(data+7)  = Long;
+     	*(double*)(data+15)  = lat;
+     	*(float*)(data+23)  = h;
+     	*(uint8*)(data+27)  = task;
+     	*(uint32*)(data+28)  = 0;
+     	printf("----|%2x,%2d,%8f,%lf,%lf,%8f,%2x\n",m_type,id,v,Long,lat,h,task);
+
+     }
+     frame_size = 46;
+  	buf[0] = CTRL_FRAME_START1;
+  	buf[1] = CTRL_FRAME_START2;
+  	buf[2] = plane_id&0xFF;
+  	buf[3] = plane_id>>8;
+  	*(uint32*)(buf+4) = frame_size;
+ 	buf[8] = 1;
+ 	buf[9] = 1;
+ 	buf[10] = CTRL_FRAME_TYPE_WAYPOINT_INIT;
+     memcpy(buf+11,data,32);
+  	crc_value = crc_checksum16(buf, frame_size-3);
+  	buf[frame_size-3] = crc_value&0xFF;
+  	buf[frame_size-2] = crc_value>>8;
+  	buf[frame_size-1] = CTRL_FRAME_END;
+  	memcpy(frame_wait_answer,buf,frame_size);
+  	/*
+  	printf("----|");
+  	for( i=0;i<frame_size;i++)
+  		printf("%2x ",frame_wait_answer[i]);
+  	printf("\n");
+  	*/
+  	control_cmd_send(frame_wait_answer, frame_size);
+  	printf("----|waiting for answer.....................\n");
+  }
+
+  void send_joystick_data()
+  {
+	 	uint16 crc_value;
+	 	uint8  buf[30];
+
+
+	 	buf[0] = CTRL_FRAME_START1;
+	 	buf[1] = CTRL_FRAME_START2;
+	 	buf[2] = plane_id&0xFF;
+	 	buf[3] = plane_id>>8;
+	 	*(uint32*)(buf+4) = 0x1e;
+		buf[8] = 1;
+		buf[9] = 1;
+	 	buf[10] = CTRL_FRAME_TYPE_STICK_DATA ;
+	 	*(uint16*)(buf+11) = 0;
+	 	*(uint16*)(buf+13) = 1;
+	 	*(uint16*)(buf+15) = 2;
+	 	*(uint16*)(buf+17) = 3;
+	 	*(uint16*)(buf+19) = 4;
+	 	*(uint16*)(buf+21) = 5;
+	 	*(uint16*)(buf+23) = 6;
+	 	*(uint16*)(buf+25) = 7;
+	 	crc_value = crc_checksum16(buf, 27);
+	 	buf[27] = crc_value&0xFF;
+	 	buf[28] = crc_value>>8;
+	 	buf[29] = CTRL_FRAME_END;
+
+	 	control_cmd_send(buf, 30);
+  }
+
 
 
 
