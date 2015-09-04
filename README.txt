@@ -6,6 +6,7 @@ you can use it to communicate with uav through RS232.
 
 make sure use "exit" to exit the program every time,so that
 you can save the flying status data received into the flying_status.csv and flying_status.raw.
+or use "save" command to save flying status data
 
 if you want to send way point data ,please add way point data in the wp_init.csv,
 you can set task field to 0x01 for test.
@@ -19,6 +20,7 @@ you can set task field to 0x01 for test.
 ---------------------------command list------------------
 exit       : save the data and exit the program 
 stop       : stop the sending data,but not exit  
+save       : save flying status data
 help       : show you command list
 servo test : send servo test command
 link  test : send link test command

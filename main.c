@@ -18,6 +18,7 @@ void how_to_use()
 {
   printf("-------------------command list------------------\n");
   printf("exit       : save the data and exit the program \n");
+  printf("save       : save flying status data\n");
   printf("stop       : stop the sending data,but not exit  \n");
   printf("help       : show you command list\n");
   printf("servo test : send servo test command\n");
@@ -223,6 +224,21 @@ int main( int argc,char *argv[])
         if(strcmp(command,"exit")==0){
 
         	break;
+        }
+        if(strcmp(command,"save")==0){
+        	fclose(fp_fly_status);
+        	fclose(fp_fly_status_raw);
+            fp_fly_status_raw=fopen("fly_status.raw","w");
+            if(fp_fly_status_raw==NULL){
+            	printf("can not open file:fly_status.raw\n");
+            	return 0;
+            }
+            fp_fly_status=fopen("fly_status.csv","w");
+            if(fp_fly_status==NULL){
+            	printf("can not open file:fly_status.csv\n");
+            	return 0;
+            }
+        	continue;
         }
 
 		usleep(20000);
