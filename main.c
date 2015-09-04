@@ -95,7 +95,7 @@ int main( int argc,char *argv[])
     	return 0;
     printf("%s is ready to go\n",dev);
 
-    printf("please enter the plane ID,enter 'y' to use default ID=1:\n");
+    printf("please enter the plane ID,enter 'yes' to use default ID=1:\n");
     fgets(buf,40,stdin);
     buf[strlen(buf)-1]='\0';
     if(strcmp(buf,"y")==0)
@@ -228,16 +228,18 @@ int main( int argc,char *argv[])
         if(strcmp(command,"save")==0){
         	fclose(fp_fly_status);
         	fclose(fp_fly_status_raw);
-            fp_fly_status_raw=fopen("fly_status.raw","w");
+
+            fp_fly_status_raw=fopen("fly_status.raw","a");
             if(fp_fly_status_raw==NULL){
             	printf("can not open file:fly_status.raw\n");
             	return 0;
             }
-            fp_fly_status=fopen("fly_status.csv","w");
+            fp_fly_status=fopen("fly_status.csv","a");
             if(fp_fly_status==NULL){
             	printf("can not open file:fly_status.csv\n");
             	return 0;
             }
+            printf("----|file saved... :\n");
         	continue;
         }
 

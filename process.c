@@ -293,12 +293,12 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             		     return frame_info->frame_size;
             	     }else{
                         // invalid CRC ,remove the whole frame from the buffer
-
+                        print_debug("invalid crc frame,frame time :%d\n",*(uint32*)(buf+47));
             		    memmove(buf,buf+frame_info->frame_size,frame_info->bytes_received-frame_info->frame_size);
             	    	frame_info->bytes_received=frame_info->bytes_received-frame_info->frame_size;
             	    	frame_info->frame_size = 0;
             		    frame_head_found = 0;
-            		    print_debug("invalid crc frame\n");
+
 
             	     }
 
