@@ -60,10 +60,15 @@ FILE *fp_fly_status;
 
 
 
+
+
+
 int com_open(char *dev);
 void com_close();
 int control_data_parse(unsigned char *buf, frame_info *frame_info,frame_wait_exe *frame_wait_exe);
 int control_cmd_send(uint8 *buf,uint32 buf_size);
+void receive_enable();
+
 
 
 #endif

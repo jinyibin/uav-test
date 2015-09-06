@@ -13,17 +13,20 @@
 
 
 static int control_fd = -1;
-static int running = 1;
+
 static uint32 frame_count=0;
+static int frame_tail_err=0;
+static int running =0;
+ static void *sensor_data_collect();
+ static pthread_t recv_pid;
 
 
 
-static pthread_t recv_pid;
-static void *sensor_data_collect();
+
+
 
 int com_open(char *dev)
 {
-
     control_fd = serial_open(dev, 115200, 0, 1);
 
 	if (control_fd < 0) {
@@ -31,16 +34,22 @@ int com_open(char *dev)
 		printf("COM %s open failed,control_fd = %d\n",  dev ,control_fd);
 		return SERIAL_CTRL_OPEN_FAILED;
 	}
-	running = 1;
-	pthread_create(&recv_pid, NULL, sensor_data_collect, NULL);
+	//
+
 	return 0;
+}
+
+void receive_enable()
+{
+    running = 1;
+    pthread_create(&recv_pid, NULL, sensor_data_collect, NULL);
 }
 
 void com_close()
 {
-	void* result = NULL;
-	running = 0;
-	pthread_join(recv_pid,&result);
+	void* result2 = NULL;
+	running =0;
+	pthread_join(recv_pid,&result2);
 	serial_close(control_fd);
 }
 
@@ -289,11 +298,17 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             	     if(frame_crc==crc_checksum16(buf, frame_info->frame_size-3)){
             	     //if(1){
             		    // we have a valid CRC
+                         if(frame_tail_err){
+                        	 print_debug("frame time :%d\n",*(uint32*)(buf+47));
+                        	 frame_tail_err=0;
 
+                         }
             		     return frame_info->frame_size;
             	     }else{
                         // invalid CRC ,remove the whole frame from the buffer
-                        print_debug("invalid crc frame,frame time :%d\n",*(uint32*)(buf+47));
+
+                        print_debug("invalid crc frame,,frame time :%d\n",*(uint32*)(buf+47));
+
             		    memmove(buf,buf+frame_info->frame_size,frame_info->bytes_received-frame_info->frame_size);
             	    	frame_info->bytes_received=frame_info->bytes_received-frame_info->frame_size;
             	    	frame_info->frame_size = 0;
@@ -306,6 +321,7 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             	     //frame tail not found ,so the frame is invalid,
             	     //we should have incorrectly detected a start of frame
                      //remove the 2 frame head bytes and start searching frame head again
+                	 frame_tail_err=1;
                 	 print_debug("ctrl :frame tail not found ,so the frame is invalid\n");
             	     memmove(buf,buf+2,frame_info->bytes_received-2);
             	     frame_info->bytes_received=frame_info->bytes_received-2;
@@ -342,7 +358,7 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
 }
 
 
-static void *sensor_data_collect()
+void *sensor_data_collect()
 {
 
 
@@ -358,7 +374,6 @@ static void *sensor_data_collect()
 	 frame_info frame_info_ctrl={0,0};
 	 frame_wait_exe frame_wait_exe = {frame_wait_answer+CTRL_FRAME_MASK_DATA,0,0,0,0};
 
-
 	struct timeval tv;
 
 	while (running) {
@@ -372,7 +387,10 @@ static void *sensor_data_collect()
 					data_len = serial_data_recv_ctrl(&frame_info_ctrl,buf_ctrl);
 					if(data_len > 0){
 
-					    control_data_parse(buf_ctrl,&frame_info_ctrl,&frame_wait_exe);
+					   control_data_parse(buf_ctrl,&frame_info_ctrl,&frame_wait_exe);
+					   if(frame_info_ctrl.bytes_received > frame_info_ctrl.frame_size){
+					        memmove(buf_ctrl,buf_ctrl+frame_info_ctrl.frame_size,frame_info_ctrl.bytes_received-frame_info_ctrl.frame_size);
+                    	}
 					   frame_info_ctrl.frame_size=0;
 					   frame_info_ctrl.bytes_received -= data_len;
 					}

@@ -11,8 +11,9 @@
 #include <unistd.h>
 
 pthread_t send_data;
+
 int joystick_test=0;
-int running=0;
+static int running =0;
 
 void how_to_use()
 {
@@ -96,9 +97,9 @@ int main( int argc,char *argv[])
     printf("%s is ready to go\n",dev);
 
     printf("please enter the plane ID,enter 'yes' to use default ID=1:\n");
-    fgets(buf,40,stdin);
+    fgets(buf,400,stdin);
     buf[strlen(buf)-1]='\0';
-    if(strcmp(buf,"y")==0)
+    if(strcmp(buf,"yes")==0)
         plane_id=1;
     else
     	plane_id=atoi(buf);
@@ -120,6 +121,7 @@ int main( int argc,char *argv[])
     file_fly_status_init();
     running =1;
    	pthread_create(&send_data, NULL, send_data_periodly, NULL);
+   	receive_enable();
 	while (1) {
 
 		fgets(buf,40,stdin);
@@ -246,12 +248,13 @@ int main( int argc,char *argv[])
 		usleep(20000);
 
 	}
+	running = 0;
 	com_close();
 	fclose(fp_fly_status);
 	fclose(fp_fly_status_raw);
-	void* result = NULL;
-	running = 0;
-	pthread_join(send_data,&result);
+	void* result1 = NULL;
+	pthread_join(send_data,&result1);
+
 
 	exit(0);
 	return 0;
