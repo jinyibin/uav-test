@@ -167,11 +167,15 @@ int control_data_parse(unsigned char *buf, frame_info *frame_info,frame_wait_exe
 	flying_status_s flying_status;
 	int ret=-1;
 	int i;
+	unsigned char data_buf[4096];
 
 
 	    if(frame_type==CTRL_FRAME_TYPE_FLY_STATUS) {
+	        //copy data field to data_buf to avoid alignment trap
+	    	memcpy(data_buf,buf+CTRL_FRAME_MASK_DATA,frame_info->frame_size);
 	    	// if the frame is flying status,extract the flying status
-            flying_status_parse(buf+CTRL_FRAME_MASK_DATA,&flying_status);
+
+            flying_status_parse(data_buf,&flying_status);
             // save the raw frame data
 	    	fwrite(buf,frame_info->frame_size,1,fp_fly_status_raw);
 	    	// save flying status as CSV format,so that we can use EXCEL to open it
