@@ -22,15 +22,14 @@
 #define CTRL_FRAME_MASK_FRAME_TYPE  10    // frame type field position start from 0
 #define CTRL_FRAME_MASK_DATA        11    // data field position start from 0
 
-#define CTRL_FRAME_MASK_WP_ID      1     // way point id position in the frame-waypoint modify
-#define CTRL_FRAME_MASK_WP_PARA     3     // way point parameter position in the frame-waypoint modify
-#define CTRL_FRAME_MASK_WP_V        3     // way point v position in the frame-waypoint modify
-#define CTRL_FRAME_MASK_WP_LONG     7     // way point long position in the frame-waypoint modify
-#define CTRL_FRAME_MASK_WP_LAT      15     // way point lat position in the frame-waypoint modify
-#define CTRL_FRAME_MASK_WP_H        23     // way point h position in the frame-waypoint modify
-#define CTRL_FRAME_MASK_WP_TASK     27     // way point task position in the frame-waypoint modify
-#define WAYPOINT_INFO_LEN     27    // byte length of way point information
-
+#define CTRL_FRAME_MASK_WP_ID      4     // way point id position in the frame-waypoint modify
+#define CTRL_FRAME_MASK_WP_PARA     8     // way point parameter position in the frame-waypoint modify
+#define CTRL_FRAME_MASK_WP_V        8     // way point v position in the frame-waypoint modify
+#define CTRL_FRAME_MASK_WP_LONG     12     // way point long position in the frame-waypoint modify
+#define CTRL_FRAME_MASK_WP_LAT      20     // way point lat position in the frame-waypoint modify
+#define CTRL_FRAME_MASK_WP_H        28     // way point h position in the frame-waypoint modify
+#define CTRL_FRAME_MASK_WP_TASK     6     // way point task position in the frame-waypoint modify
+#define WAYPOINT_INFO_LEN     28    // byte length of way point information
 #define CTRL_FRAME_MASK_WP_NUM  0      // way point number of received frame position in the frame waypoint set
 
 
@@ -54,6 +53,8 @@
 #define CTRL_FRAME_TYPE_STICK_DATA       0xD6        // data from joystick
 #define CTRL_FRAME_TYPE_LINK_TEST        0x69
 #define CTRL_FRAME_TYPE_EXPORT_DATA      0x86
+#define CTRL_FRAME_TYPE_GROUND_OK        0xEF        //gound check over,ready to go
+#define CTRL_FRAME_TYPE_MANUAL_MODE      0x5E        //heli is controlled manually
 /* frame to the ground   */
 #define CTRL_FRAME_TYPE_FLY_STATUS       0x55
 #define CTRL_FRAME_TYPE_ERROR            0x41
@@ -78,6 +79,7 @@
 #define AIRCRAFT_HOVERING 0x80
 #define AIRCRAFT_RETURN 0x100
 #define AIRCRAFT_OBS_AVOIDING 0x1000
+#define AIRCRAFT_MANUAL_MODE 0x2000
 #define AIRCRAFT_FAULT 0xFF
 
 
@@ -93,11 +95,11 @@ typedef struct flying_status_s {
 	float ax;
 	float ay;
 	float az;
-	float vn;
-	float ve;
-	float vd;
-	float h;
-	float b_h;
+	int vn;
+	int ve;
+	int vd;
+	int heading;
+	int b_h;
 	double lat;
 	double Long;
 	double g_h;

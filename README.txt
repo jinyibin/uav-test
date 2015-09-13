@@ -42,6 +42,8 @@ wp init    : initialize the way point,add data in the wp_ini.csv
              format:id,v,Long,lat,h,task
 firmware   : update the firmware
 export     : export data
+manual     : manual mode
+ground ok  : ground check ok
 ------------------------------------------------------------------------------------------
 
 

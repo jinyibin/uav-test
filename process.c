@@ -60,8 +60,8 @@ static void save_flying_status(flying_status_s *flying_status)
 	fprintf(fp_fly_status,"%f,%f,%f,",flying_status->roll,flying_status->pitch,flying_status->yaw);
 	fprintf(fp_fly_status,"%f,%f,%f,",flying_status->gx,flying_status->gy,flying_status->gz);
 	fprintf(fp_fly_status,"%f,%f,%f,",flying_status->ax,flying_status->ay,flying_status->az);
-	fprintf(fp_fly_status,"%f,%f,%f,",flying_status->vn,flying_status->ve,flying_status->vd);
-	fprintf(fp_fly_status,"%f,%f,",flying_status->h,flying_status->b_h);
+	fprintf(fp_fly_status,"%d,%d,%d,",flying_status->vn,flying_status->ve,flying_status->vd);
+	fprintf(fp_fly_status,"%d,%d,",flying_status->heading,flying_status->b_h);
 	fprintf(fp_fly_status,"%f,%f,%f,",flying_status->lat,flying_status->Long,flying_status->g_h);
 	fprintf(fp_fly_status,"%f,%f,%f,",flying_status->vx,flying_status->vy,flying_status->vz);
 	fprintf(fp_fly_status,"%d,%d,",flying_status->sonar_h,flying_status->waypoint_dest);
