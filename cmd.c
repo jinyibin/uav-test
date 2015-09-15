@@ -312,7 +312,212 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
    	control_cmd_send(buf, 18);
 
    }
+  void heli_config()
+    {
+    	uint16 crc_value;
+    	uint8  buf[25];
+    	char file_head[254];
 
+       FILE *fp;
+       uint32 heli_type;
+       uint32 fuel_vol;
+       uint32 fuel_consum;
+       uint32 swash_typ;
+       uint32 servo_freq;
+       uint32 tail_gyro;
+       uint32 max_speed;
+       uint32 gps_typ;
+       uint32 radar;
+       uint32 rsv1;
+       uint32 rsv2;
+
+       uint8 data[11];
+       uint32 frame_size;
+       int i=0;
+
+       fp=fopen("heli_config.csv","r");
+       if(fp==NULL){
+       	printf("----|can not open file:heli_config.csv\n");
+       	printf("----|sending heli config command failed\n");
+       }
+       //read out file information
+       fscanf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",file_head,file_head+10,
+    		   file_head+20,file_head+30,file_head+40,file_head+50,
+    		   file_head+60,file_head+70,file_head+80,file_head+90,file_head+100);
+       // read data
+       while(fscanf(fp,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", &heli_type,&fuel_vol,
+    		   &fuel_consum,&swash_typ,&servo_freq,&tail_gyro,&max_speed,&gps_typ,&radar,&rsv1,&rsv2)==11){
+            data[0]=(uint8)heli_type;
+            data[1]=(uint8)fuel_vol;
+            data[2]=(uint8)fuel_consum;
+            data[3]=(uint8)swash_typ;
+            data[4]=(uint8)servo_freq;
+            data[5]=(uint8)tail_gyro;
+            data[6]=(uint8)max_speed;
+            data[7]=(uint8)gps_typ;
+            data[8]=(uint8)radar;
+            data[9]=(uint8)rsv1;
+            data[10]=(uint8)rsv2;
+
+         	printf("----|%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x\n",heli_type,fuel_vol,
+     		   fuel_consum,swash_typ,servo_freq,tail_gyro,max_speed,gps_typ,radar,rsv1,rsv2);
+
+       }
+       frame_size = 25;
+    	buf[0] = CTRL_FRAME_START1;
+    	buf[1] = CTRL_FRAME_START2;
+    	buf[2] = plane_id&0xFF;
+    	buf[3] = plane_id>>8;
+    	*(uint32*)(buf+4) = frame_size;
+     	buf[8] = 1;
+    	buf[9] = 1;
+    	buf[10] = CTRL_FRAME_TYPE_HELI_CONFIG;
+        memcpy(buf+11,data,frame_size-14);
+    	crc_value = crc_checksum16(buf, frame_size-3);
+    	buf[frame_size-3] = crc_value&0xFF;
+    	buf[frame_size-2] = crc_value>>8;
+    	buf[frame_size-1] = CTRL_FRAME_END;
+    	memcpy(frame_wait_answer,buf,frame_size);
+
+    	printf("----|");
+    	for( i=0;i<frame_size;i++)
+    		printf("%2x ",frame_wait_answer[i]);
+    	printf("\n");
+
+    	control_cmd_send(frame_wait_answer, frame_size);
+    	printf("----|waiting for answer.....................\n");
+    }
+  void send_fly_para1()
+      {
+      	uint16 crc_value;
+      	uint8  buf[46];
+
+         FILE *fp;
+         uint32 data[15];
+         uint32 frame_size;
+         int i=0;
+
+         fp=fopen("fly_para1.csv","r");
+         if(fp==NULL){
+         	printf("----|can not open file:fly_para1.csv\n");
+         	printf("----|sending fly_para1 command failed\n");
+         }
+
+         // read data
+         while(fscanf(fp,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", data,data+1,data+2,data+3,data+4,data+5,
+      		   data+6,data+7,data+8,data+9,data+10,data+11,data+12,data+13,data+14,data+15)==16){
+
+
+           	printf("----|%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",data[0],data[1],
+           			data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],
+           			data[11],data[12],data[13],data[14],data[15]);
+
+         }
+         frame_size = 46;
+      	buf[0] = CTRL_FRAME_START1;
+      	buf[1] = CTRL_FRAME_START2;
+      	buf[2] = plane_id&0xFF;
+      	buf[3] = plane_id>>8;
+      	*(uint32*)(buf+4) = frame_size;
+       	buf[8] = 1;
+      	buf[9] = 1;
+      	buf[10] = CTRL_FRAME_TYPE_FLY_PARA1;
+        *(uint16*)(buf+11) = (uint16)data[0];
+        *(uint16*)(buf+13) = (uint16)data[1];
+        *(uint16*)(buf+15) = (uint16)data[2];
+        *(uint16*)(buf+17) = (uint16)data[3];
+        *(uint16*)(buf+19) = (uint16)data[4];
+        *(uint16*)(buf+21) = (uint16)data[5];
+        *(uint16*)(buf+23) = (uint16)data[6];
+        *(uint16*)(buf+25) = (uint16)data[7];
+        *(uint16*)(buf+27) = (uint16)data[8];
+        *(uint16*)(buf+29) = (uint16)data[9];
+        *(uint16*)(buf+31) = (uint16)data[10];
+        *(uint16*)(buf+33) = (uint16)data[11];
+        *(uint16*)(buf+35) = (uint16)data[12];
+        *(uint16*)(buf+37) = (uint16)data[13];
+        *(uint16*)(buf+39) = (uint16)data[14];
+        *(uint16*)(buf+41) = (uint16)data[15];
+      	crc_value = crc_checksum16(buf, frame_size-3);
+      	buf[frame_size-3] = crc_value&0xFF;
+      	buf[frame_size-2] = crc_value>>8;
+      	buf[frame_size-1] = CTRL_FRAME_END;
+      	memcpy(frame_wait_answer,buf,frame_size);
+
+      	printf("----|");
+      	for( i=0;i<frame_size;i++)
+      		printf("%2x ",frame_wait_answer[i]);
+      	printf("\n");
+
+      	control_cmd_send(frame_wait_answer, frame_size);
+      	printf("----|waiting for answer.....................\n");
+      }
+
+  void send_fly_para2()
+       {
+       	uint16 crc_value;
+       	uint8  buf[46];
+
+          FILE *fp;
+          uint32 data[15];
+          uint32 frame_size;
+          int i=0;
+
+          fp=fopen("fly_para2.csv","r");
+          if(fp==NULL){
+          	printf("----|can not open file:fly_para2.csv\n");
+          	printf("----|sending fly_para2 command failed\n");
+          }
+
+          // read data
+          while(fscanf(fp,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", data,data+1,data+2,data+3,data+4,data+5,
+       		   data+6,data+7,data+8,data+9,data+10,data+11,data+12,data+13,data+14,data+15)==16){
+
+
+            	printf("----|%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",data[0],data[1],
+            			data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],
+            			data[11],data[12],data[13],data[14],data[15]);
+
+          }
+          frame_size = 46;
+       	buf[0] = CTRL_FRAME_START1;
+       	buf[1] = CTRL_FRAME_START2;
+       	buf[2] = plane_id&0xFF;
+       	buf[3] = plane_id>>8;
+       	*(uint32*)(buf+4) = frame_size;
+        	buf[8] = 1;
+       	buf[9] = 1;
+       	buf[10] = CTRL_FRAME_TYPE_FLY_PARA2;
+         *(uint16*)(buf+11) = (uint16)data[0];
+         *(uint16*)(buf+13) = (uint16)data[1];
+         *(uint16*)(buf+15) = (uint16)data[2];
+         *(uint16*)(buf+17) = (uint16)data[3];
+         *(uint16*)(buf+19) = (uint16)data[4];
+         *(uint16*)(buf+21) = (uint16)data[5];
+         *(uint16*)(buf+23) = (uint16)data[6];
+         *(uint16*)(buf+25) = (uint16)data[7];
+         *(uint16*)(buf+27) = (uint16)data[8];
+         *(uint16*)(buf+29) = (uint16)data[9];
+         *(uint16*)(buf+31) = (uint16)data[10];
+         *(uint16*)(buf+33) = (uint16)data[11];
+         *(uint16*)(buf+35) = (uint16)data[12];
+         *(uint16*)(buf+37) = (uint16)data[13];
+         *(uint16*)(buf+39) = (uint16)data[14];
+         *(uint16*)(buf+41) = (uint16)data[15];
+       	crc_value = crc_checksum16(buf, frame_size-3);
+       	buf[frame_size-3] = crc_value&0xFF;
+       	buf[frame_size-2] = crc_value>>8;
+       	buf[frame_size-1] = CTRL_FRAME_END;
+       	memcpy(frame_wait_answer,buf,frame_size);
+
+       	printf("----|");
+       	for( i=0;i<frame_size;i++)
+       		printf("%2x ",frame_wait_answer[i]);
+       	printf("\n");
+
+       	control_cmd_send(frame_wait_answer, frame_size);
+       	printf("----|waiting for answer.....................\n");
+       }
 
 
 

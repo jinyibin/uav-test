@@ -42,6 +42,8 @@ void how_to_use()
   printf("             format:id,v,Long,lat,h,task\n");
   printf("firmware   : update the firmware\n");
   printf("export     : export data\n");
+  printf("manual     : manual mode\n");
+  printf("ground ok  : ground ready to go\n");
 }
 
 void file_fly_status_init()
@@ -51,7 +53,7 @@ void file_fly_status_init()
    fprintf(fp_fly_status,"gx,gy,gz,");
    fprintf(fp_fly_status,"ax,ay,az,");
    fprintf(fp_fly_status,"vn,ve,vd,");
-   fprintf(fp_fly_status,"high,b_high,");
+   fprintf(fp_fly_status,"heading,b_high,");
    fprintf(fp_fly_status,"lat,long,g_h,");
    fprintf(fp_fly_status,"vx,vy,vz,");
    fprintf(fp_fly_status,"sonar,wp_id,");
@@ -184,6 +186,16 @@ int main( int argc,char *argv[])
         	send_control_cmd(CTRL_FRAME_TYPE_RETURN);
         	continue;
         }
+        if(strcmp(command,"manual")==0){
+        	printf("----|sending manual command :\n");
+        	send_control_cmd(CTRL_FRAME_TYPE_MANUAL_MODE);
+        	continue;
+        }
+        if(strcmp(command,"ground ok")==0){
+        	printf("----|sending ground ok command :\n");
+        	send_control_cmd(CTRL_FRAME_TYPE_GROUND_OK);
+        	continue;
+        }
 
         if(strcmp(command,"fly")==0){
         	printf("----|sending fly command :\n");
@@ -193,7 +205,19 @@ int main( int argc,char *argv[])
 
         if(strcmp(command,"config")==0){
         	printf("----|sending heli config command :\n");
-        	send_control_cmd(CTRL_FRAME_TYPE_HELI_CONFIG);
+        	heli_config();
+        	continue;
+        }
+
+        if(strcmp(command,"para set1")==0){
+        	printf("----|sending fly para1 command :\n");
+        	send_fly_para1();
+        	continue;
+        }
+
+        if(strcmp(command,"para set2")==0){
+        	printf("----|sending fly para2 command :\n");
+        	send_fly_para2();
         	continue;
         }
         if(strcmp(command,"link test")==0){

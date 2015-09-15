@@ -130,6 +130,9 @@ void send_joystick_data();
 void send_way_point();
 void way_point_modify();
 void link_test();
+void heli_config();
+void send_fly_para1();
+void send_fly_para2();
 
 
 #endif

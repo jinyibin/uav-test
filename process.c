@@ -117,6 +117,9 @@ static void error_parse(uint8 *data)
    case INVALID_CMD:
 	   printf("----|invalid command\n");
 		   break;
+   case UNSUPPORTED_CMD:
+	   printf("----|unsupported command\n");
+		   break;
    case CMD_TYPE_MISMATCH:
 	   printf("----|CMD_TYPE_MISMATCH\n");
 	   break;
