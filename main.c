@@ -120,6 +120,12 @@ int main( int argc,char *argv[])
     	printf("can not open file:fly_status.csv\n");
     	return 0;
     }
+
+    fp_bytes_raw=fopen("rawdata","w");
+    if(fp_fly_status==NULL){
+    	printf("can not open file:rawdata\n");
+    	return 0;
+    }
     file_fly_status_init();
     running =1;
    	pthread_create(&send_data, NULL, send_data_periodly, NULL);
@@ -254,6 +260,7 @@ int main( int argc,char *argv[])
         if(strcmp(command,"save")==0){
         	fclose(fp_fly_status);
         	fclose(fp_fly_status_raw);
+        	fclose(fp_bytes_raw);
 
             fp_fly_status_raw=fopen("fly_status.raw","a");
             if(fp_fly_status_raw==NULL){
@@ -263,6 +270,11 @@ int main( int argc,char *argv[])
             fp_fly_status=fopen("fly_status.csv","a");
             if(fp_fly_status==NULL){
             	printf("can not open file:fly_status.csv\n");
+            	return 0;
+            }
+            fp_bytes_raw=fopen("rawdata","w");
+            if(fp_fly_status==NULL){
+            	printf("can not open file:rawdata\n");
             	return 0;
             }
             printf("----|file saved... :\n");
@@ -276,6 +288,7 @@ int main( int argc,char *argv[])
 	com_close();
 	fclose(fp_fly_status);
 	fclose(fp_fly_status_raw);
+	fclose(fp_bytes_raw);
 	void* result1 = NULL;
 	pthread_join(send_data,&result1);
 

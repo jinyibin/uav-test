@@ -57,6 +57,7 @@ uint16 plane_id;
 unsigned char frame_wait_answer[BUF_SIZE_CTRL]; // buffer to store data field of control frame
 FILE *fp_fly_status_raw;
 FILE *fp_fly_status;
+FILE *fp_bytes_raw;
 
 
 

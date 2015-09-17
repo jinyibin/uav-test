@@ -22,9 +22,6 @@ static int running =0;
 
 
 
-
-
-
 int com_open(char *dev)
 {
     control_fd = serial_open(dev, 115200, 0, 1);
@@ -253,11 +250,12 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
 
     	// make sure buf never will be overflowed
       nread=read(control_fd,buf+frame_info->bytes_received,BUF_SIZE_CTRL-frame_info->bytes_received);
-
+      fwrite(buf+frame_info->bytes_received,nread,1,fp_bytes_raw);
  	  frame_info->bytes_received += nread;
 
  	while(frame_info->bytes_received > 0){
  		//print_debug("ctrl bytes received %d\n",frame_info->bytes_received);
+
  	   // start searching frame head if at least 2 bytes has been received
  	   if(frame_info->bytes_received >= 2){
  	        for(i=0;i<frame_info->bytes_received-1;i++){
@@ -330,6 +328,9 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
                      //remove the 2 frame head bytes and start searching frame head again
                 	 frame_tail_err=1;
                 	 print_debug("ctrl :frame tail not found ,so the frame is invalid\n");
+                	 for(i=0;i<frame_info->bytes_received;i++)
+                		 printf("%2x ",buf[i]);
+                	 printf("\n");
             	     memmove(buf,buf+2,frame_info->bytes_received-2);
             	     frame_info->bytes_received=frame_info->bytes_received-2;
             	     frame_info->frame_size = 0;
@@ -340,6 +341,9 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
                 // invalid frame_size ,which means wrong frame head is detected
                  // we need to remove the 2 wrong frame head bytes
             	 print_debug("ctrl :invalid frame_size \n");
+            	 for(i=0;i<frame_info->bytes_received;i++)
+            		 printf("%2x ",buf[i]);
+            	 printf("\n");
                  memmove(buf,buf+2,frame_info->bytes_received-2);
                  frame_info->bytes_received=frame_info->bytes_received-2;
                  frame_info->frame_size = 0;
@@ -349,6 +353,9 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             //unable to find a valid start of frame
             //so check the last byte is FRAME_START1 in order to keep it for next time
     	    print_debug("ctrl :invalid start of frame\n");
+       	    for(i=0;i<frame_info->bytes_received;i++)
+       		   printf("%2x ",buf[i]);
+       	    printf("\n");
             if(buf[frame_info->bytes_received-1]==CTRL_FRAME_START1){
                 buf[0] = CTRL_FRAME_START1;
                 frame_info->bytes_received = 1;
@@ -392,6 +399,7 @@ void *sensor_data_collect()
                     if (FD_ISSET(control_fd, &rfds)) {
 
 					data_len = serial_data_recv_ctrl(&frame_info_ctrl,buf_ctrl);
+
 					if(data_len > 0){
 
 					   control_data_parse(buf_ctrl,&frame_info_ctrl,&frame_wait_exe);
