@@ -6,7 +6,7 @@
 #include "cmd.h"
 #include "process.h"
 
-
+extern WINDOW *console;
 
 
 
@@ -87,7 +87,8 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
 	 	buf[14] = crc_value>>8;
 	 	buf[15] = CTRL_FRAME_END;
 	 	control_cmd_send(buf, 16);
-	 	printf("----|confirm cmd sent,type=%x ,waiting for execution answer.....................\n",data);
+	 	printx(console,"----|confirm cmd sent,type=%x ,waiting for execution answer.....................\n",data);
+	 	wrefresh(console);
 
  }
 
@@ -114,12 +115,13 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
  	buf[13] = crc_value>>8;
  	buf[14] = CTRL_FRAME_END;
  	memcpy(frame_wait_answer,buf,15);
- 	printf("----|");
+ 	printx(console,"----|");
  	for( i=0;i<15;i++)
- 		printf("%2x ",frame_wait_answer[i]);
- 	printf("\n");
+ 		printx(console,"%2x ",frame_wait_answer[i]);
+ 	printx(console,"\n");
  	control_cmd_send(frame_wait_answer, 15);
- 	printf("----|waiting for answer.....................\n");
+ 	printx(console,"----|waiting for answer.....................\n");
+ 	wrefresh(console);
  }
 
   void send_way_point()
@@ -144,8 +146,8 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
 
     fp=fopen("wp_init.csv","r");
     if(fp==NULL){
-    	printf("----|can not open file:wp_init.csv\n");
-    	printf("----|sending waypoint failed\n");
+    	printx(console,"----|can not open file:wp_init.csv\n");
+    	printx(console,"----|sending waypoint failed\n");
     }
     //read out file information
     fscanf(fp,"%s,%s",file_head+60,file_head+70);
@@ -162,7 +164,7 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
     	*(float*)(data+24+i*28)  = h;
 
     	i++;
-    	printf("----|%2d,%2x,%2x,%8f,%lf,%lf,%8f\n",id,task,task_para,v,Long,lat,h);
+    	printx(console,"----|%2d,%2x,%2x,%8f,%lf,%lf,%8f\n",id,task,task_para,v,Long,lat,h);
 
     }
     frame_size = i*28+18;
@@ -186,13 +188,14 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
  	buf[frame_size-1] = CTRL_FRAME_END;
  	memcpy(frame_wait_answer,buf,frame_size);
 
- 	printf("----|");
+ 	printx(console,"----|");
  	for( i=0;i<frame_size;i++)
- 		printf("%2x ",frame_wait_answer[i]);
- 	printf("\n");
+ 		printx(console,"%2x ",frame_wait_answer[i]);
+ 	printx(console,"\n");
 
  	control_cmd_send(frame_wait_answer, frame_size);
- 	printf("----|waiting for answer.....................\n");
+ 	printx(console,"----|waiting for answer.....................\n");
+ 	wrefresh(console);
  }
 
   void way_point_modify()
@@ -217,8 +220,8 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
 
      fp=fopen("wp_modify.csv","r");
      if(fp==NULL){
-     	printf("----|can not open file:wp_modify.csv\n");
-     	printf("----|sending waypoint modify command failed\n");
+     	printx(console,"----|can not open file:wp_modify.csv\n");
+     	printx(console,"----|sending waypoint modify command failed\n");
      }
      //read out file information
      fscanf(fp,"%s,%s,%s,%s,%s,%s,%s,%s",file_head,file_head+10,file_head+20,file_head+30,file_head+40,file_head+50,file_head+60,file_head+70);
@@ -234,7 +237,7 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
      	*(float*)(data+28)  = h;
 
      	*(uint32*)(data+32)  = 0;
-     	printf("----|%2x,%2d,%2x,%2x,%8f,%lf,%lf,%8f\n",m_type,id,task,task_para,v,Long,lat,h);
+     	printx(console,"----|%2x,%2d,%2x,%2x,%8f,%lf,%lf,%8f\n",m_type,id,task,task_para,v,Long,lat,h);
 
      }
      frame_size = 50;
@@ -255,13 +258,14 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
   	buf[frame_size-1] = CTRL_FRAME_END;
   	memcpy(frame_wait_answer,buf,frame_size);
 
-  	printf("----|");
+  	printx(console,"----|");
   	for( i=0;i<frame_size;i++)
-  		printf("%2x ",frame_wait_answer[i]);
-  	printf("\n");
+  		printx(console,"%2x ",frame_wait_answer[i]);
+  	printx(console,"\n");
 
   	control_cmd_send(frame_wait_answer, frame_size);
-  	printf("----|waiting for answer.....................\n");
+  	printx(console,"----|waiting for answer.....................\n");
+  	wrefresh(console);
   }
 
   void send_joystick_data()
@@ -317,10 +321,11 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
    	buf[16] = crc_value>>8;
    	buf[17] = CTRL_FRAME_END;
 
-   	printf("----|");
+   	printx(console,"----|");
    	for( i=0;i<15;i++)
-   		printf("%2x ",buf[i]);
-   	printf("\n");
+   		printx(console,"%2x ",buf[i]);
+   	printx(console,"\n");
+   	wrefresh(console);
    	control_cmd_send(buf, 18);
 
    }
@@ -349,8 +354,8 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
 
        fp=fopen("heli_config.csv","r");
        if(fp==NULL){
-       	printf("----|can not open file:heli_config.csv\n");
-       	printf("----|sending heli config command failed\n");
+       	printx(console,"----|can not open file:heli_config.csv\n");
+       	printx(console,"----|sending heli config command failed\n");
        }
        //read out file information
        fscanf(fp,"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",file_head,file_head+10,
@@ -371,7 +376,7 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
             data[9]=(uint8)rsv1;
             data[10]=(uint8)rsv2;
 
-         	printf("----|%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x\n",heli_type,fuel_vol,
+         	printx(console,"----|%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x,%2x\n",heli_type,fuel_vol,
      		   fuel_consum,swash_typ,servo_freq,tail_gyro,max_speed,gps_typ,radar,rsv1,rsv2);
 
        }
@@ -393,13 +398,14 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
     	buf[frame_size-1] = CTRL_FRAME_END;
     	memcpy(frame_wait_answer,buf,frame_size);
 
-    	printf("----|");
+    	printx(console,"----|");
     	for( i=0;i<frame_size;i++)
-    		printf("%2x ",frame_wait_answer[i]);
-    	printf("\n");
+    		printx(console,"%2x ",frame_wait_answer[i]);
+    	printx(console,"\n");
 
     	control_cmd_send(frame_wait_answer, frame_size);
-    	printf("----|waiting for answer.....................\n");
+    	printx(console,"----|waiting for answer.....................\n");
+    	wrefresh(console);
     }
   void send_fly_para1()
       {
@@ -407,14 +413,16 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
       	uint8  buf[46];
 
          FILE *fp;
-         uint32 data[15];
+         uint32 data[16];
          uint32 frame_size;
          int i=0;
 
          fp=fopen("fly_para1.csv","r");
          if(fp==NULL){
-         	printf("----|can not open file:fly_para1.csv\n");
-         	printf("----|sending fly_para1 command failed\n");
+        	 wattron(console,COLOR_PAIR(2));
+         	printx(console,"----|can not open file:fly_para1.csv\n");
+         	printx(console,"----|sending fly_para1 command failed\n");
+         	wattroff(console,COLOR_PAIR(2));
          }
 
          // read data
@@ -422,7 +430,7 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
       		   data+6,data+7,data+8,data+9,data+10,data+11,data+12,data+13,data+14,data+15)==16){
 
 
-           	printf("----|%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",data[0],data[1],
+           	printx(console,"----|%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",data[0],data[1],
            			data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],
            			data[11],data[12],data[13],data[14],data[15]);
 
@@ -460,13 +468,14 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
       	buf[frame_size-1] = CTRL_FRAME_END;
       	memcpy(frame_wait_answer,buf,frame_size);
 
-      	printf("----|");
+      	printx(console,"----|");
       	for( i=0;i<frame_size;i++)
-      		printf("%2x ",frame_wait_answer[i]);
-      	printf("\n");
+      		printx(console,"%2x ",frame_wait_answer[i]);
+      	printx(console,"\n");
 
       	control_cmd_send(frame_wait_answer, frame_size);
-      	printf("----|waiting for answer.....................\n");
+      	printx(console,"----|waiting for answer.....................\n");
+      	wrefresh(console);
       }
 
   void send_fly_para2()
@@ -475,14 +484,16 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
        	uint8  buf[46];
 
           FILE *fp;
-          uint32 data[15];
+          uint32 data[16];
           uint32 frame_size;
           int i=0;
 
           fp=fopen("fly_para2.csv","r");
           if(fp==NULL){
-          	printf("----|can not open file:fly_para2.csv\n");
-          	printf("----|sending fly_para2 command failed\n");
+        	  wattron(console,COLOR_PAIR(2));
+          	printx(console,"----|can not open file:fly_para2.csv\n");
+          	printx(console,"----|sending fly_para2 command failed\n");
+          	wattroff(console,COLOR_PAIR(2));
           }
 
           // read data
@@ -490,7 +501,7 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
        		   data+6,data+7,data+8,data+9,data+10,data+11,data+12,data+13,data+14,data+15)==16){
 
 
-            	printf("----|%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",data[0],data[1],
+            	printx(console,"----|%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",data[0],data[1],
             			data[2],data[3],data[4],data[5],data[6],data[7],data[8],data[9],data[10],
             			data[11],data[12],data[13],data[14],data[15]);
 
@@ -528,13 +539,14 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
        	buf[frame_size-1] = CTRL_FRAME_END;
        	memcpy(frame_wait_answer,buf,frame_size);
 
-       	printf("----|");
+       	printx(console,"----|");
        	for( i=0;i<frame_size;i++)
-       		printf("%2x ",frame_wait_answer[i]);
-       	printf("\n");
+       		printx(console,"%2x ",frame_wait_answer[i]);
+       	printx(console,"\n");
 
        	control_cmd_send(frame_wait_answer, frame_size);
-       	printf("----|waiting for answer.....................\n");
+       	printx(console,"----|waiting for answer.....................\n");
+       	wrefresh(console);
        }
 
 

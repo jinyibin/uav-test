@@ -10,6 +10,7 @@
 #include "crc.h"
 #include "serial.h"
 #include "process.h"
+#include "display.h"
 
 
 static int control_fd = -1;
@@ -19,16 +20,17 @@ static int frame_tail_err=0;
 static int running =0;
  static void *sensor_data_collect();
  static pthread_t recv_pid;
-
-
+ static int counter=0;
 
 int com_open(char *dev)
 {
     control_fd = serial_open(dev, 115200, 0, 1);
 
 	if (control_fd < 0) {
-
-		printf("COM %s open failed,control_fd = %d\n",  dev ,control_fd);
+		wattron(console,COLOR_PAIR(2));
+		printx(console,"COM %s open failed,control_fd = %d\n",  dev ,control_fd);
+		wattroff(console,COLOR_PAIR(2));
+		wrefresh(console);
 		return SERIAL_CTRL_OPEN_FAILED;
 	}
 	//
@@ -71,20 +73,22 @@ static void save_flying_status(flying_status_s *flying_status)
 static int frame_compare(uint16 frame_size,uint8 *cmd,uint8 *answer)
 {
   int i=0;
-  printf("----|receive answer from air:");
+  printx(console,"----|receive answer from air:");
+  wrefresh(console);
   if(frame_size<30){
       for(i=0;i<frame_size;i++){
-         printf("%2x",answer[i]);
+         printx(console,"%2x",answer[i]);
       }
-      printf("\n");
+      printx(console,"\n");
 
 
-      printf("----|the command  we sent is:");
+      printx(console,"----|the command  we sent is:");
       for(i=0;i<frame_size;i++){
-          printf("%2x",cmd[i]);
+          printx(console,"%2x",cmd[i]);
       }
-      printf("\n");
+      printx(console,"\n");
   }
+  wrefresh(console);
   for(i=0;i<frame_size;i++){
      if(cmd[i]!=answer[i])
     	 return -1;
@@ -100,63 +104,67 @@ static void version_extract(uint8 *data)
    uint32 kernel = *(uint32*)(data+1);
    uint32 app = *(uint32*)(data+5);
    uint32 logic = *(uint32*)(data+9);
-   printf("----|board_id:%x \n",board_id);
-   printf("----|kernel:%x \n",kernel);
-   printf("----|software:%x \n",app);
-   printf("----|FPGA:%d \n",logic);
+   printx(console,"----|board_id:%x \n",board_id);
+   printx(console,"----|kernel:%x \n",kernel);
+   printx(console,"----|software:%x \n",app);
+   printx(console,"----|FPGA:%d \n",logic);
+   wrefresh(console);
 
 }
 
 static void error_parse(uint8 *data)
 {
    int8 error_tag=data[0];
+   wattron(console,COLOR_PAIR(2));
    switch(error_tag){
    case INVALID_CMD:
-	   printf("----|invalid command\n");
+	   printx(console,"----|invalid command\n");
 		   break;
    case UNSUPPORTED_CMD:
-	   printf("----|unsupported command\n");
+	   printx(console,"----|unsupported command\n");
 		   break;
    case CMD_TYPE_MISMATCH:
-	   printf("----|CMD_TYPE_MISMATCH\n");
+	   printx(console,"----|CMD_TYPE_MISMATCH\n");
 	   break;
    case SERIAL_NO_DATA:
-	   printf("----|SERIAL_NO_DATA\n");
+	   printx(console,"----|SERIAL_NO_DATA\n");
 	   break;
    case SPI_OPEN_FAILED:
-	   printf("----|SPI_OPEN_FAILED\n");
+	   printx(console,"----|SPI_OPEN_FAILED\n");
 	   break;
    case SPI_SETUP_FAILED:
-	   printf("----|SPI_SETUP_FAILED\n");
+	   printx(console,"----|SPI_SETUP_FAILED\n");
 	   break;
    case SPI_DUMP_FAILED:
-	   printf("----|SPI_DUMP_FAILED\n");
+	   printx(console,"----|SPI_DUMP_FAILED\n");
 	   break;
    case PWM_WRITE_FAILED:
-	   printf("----|PWM_WRITE_FAILED\n");
+	   printx(console,"----|PWM_WRITE_FAILED\n");
 	   break;
    case SPI_WRITE_FAILED:
-	   printf("----|SPI_WRITE_FAILED\n");
+	   printx(console,"----|SPI_WRITE_FAILED\n");
 	   break;
    case ADC_TEMP_OPEN_FAILED:
-	   printf("----|ADC_TEMP_OPEN_FAILED\n");
+	   printx(console,"----|ADC_TEMP_OPEN_FAILED\n");
 	   break;
    case ADC_PS_OPEN_FAILED:
-	   printf("----|ADC_PS_OPEN_FAILED\n");
+	   printx(console,"----|ADC_PS_OPEN_FAILED\n");
 	   break;
    case SERIAL_GPS_OPEN_FAILED:
-	   printf("----|SERIAL_GPS_OPEN_FAILED\n");
+	   printx(console,"----|SERIAL_GPS_OPEN_FAILED\n");
 	   break;
    case SERIAL_CTRL_OPEN_FAILED:
-	   printf("----|SERIAL_CTRL_OPEN_FAILED\n");
+	   printx(console,"----|SERIAL_CTRL_OPEN_FAILED\n");
 	   break;
    case CTRL_FRAME_CRC_FAILED:
-	   printf("----|CTRL_FRAME_CRC_FAILED\n");
+	   printx(console,"----|CTRL_FRAME_CRC_FAILED\n");
 	   break;
    case GPS_FRAME_CRC_FAILED:
-	   printf("----|GPS_FRAME_CRC_FAILED\n");
+	   printx(console,"----|GPS_FRAME_CRC_FAILED\n");
 	   break;
    }
+   wattroff(console,COLOR_PAIR(2));
+   wrefresh(console);
 }
 
 int control_data_parse(unsigned char *buf, frame_info *frame_info,frame_wait_exe *frame_wait_exe)
@@ -181,11 +189,19 @@ int control_data_parse(unsigned char *buf, frame_info *frame_info,frame_wait_exe
 	    	// save flying status as CSV format,so that we can use EXCEL to open it
 	    	save_flying_status(&flying_status);
 
+            if(counter==25){
+	    	 cockpit_display(&flying_status);
+	    	 counter = 0;
+            }
+            counter++;
 		}else if(frame_type==CTRL_FRAME_TYPE_CMD_ACK){
             //if the frame is an answer from air ,check if the answer is ok
 			ret=frame_compare(frame_info->frame_size-14,frame_wait_answer,buf+CTRL_FRAME_MASK_DATA);
 			if(ret<0){
-				printf("----|answer from air is wrong\n");
+				wattron(console,COLOR_PAIR(2));
+				printx(console,"----|answer from air is wrong\n");
+				wattroff(console,COLOR_PAIR(2));
+				wrefresh(console);
 				return -1;
 			}
 			//the answer is ok
@@ -196,34 +212,43 @@ int control_data_parse(unsigned char *buf, frame_info *frame_info,frame_wait_exe
 			//send out confirm command to the air
 			send_cmd_confirm(frame_wait_exe->type);
 		}else if(frame_type==CTRL_FRAME_TYPE_CMD_EXE){
-			printf("----|receive cmd execute answer:");
+			printx(console,"----|receive cmd execute answer:");
 			for(i=0;i<frame_info->frame_size;i++)
-			     printf("%2x ",buf[i]);
-			printf("\n");
+			     printx(console,"%2x ",buf[i]);
+			printx(console,"\n");
 			if(buf[11]==frame_wait_exe->type)
-				printf("----|command execute sucessfully\n");
-			else
-				printf("----|command confirm error,cmd type mismatch\n");
-
-
+				printx(console,"----|command execute sucessfully\n");
+			else{
+				wattron(console,COLOR_PAIR(2));
+				printx(console,"----|command confirm error,cmd type mismatch\n");
+				wattroff(console,COLOR_PAIR(2));
+			}
+			wrefresh(console);
 
 		}else if(frame_type==CTRL_FRAME_TYPE_VERSION){
-			printf("----|receive version information:");
+			printx(console,"----|receive version information:");
 			for(i=0;i<frame_info->frame_size;i++)
-			     printf("%2x ",buf[i]);
-			printf("\n");
+			     printx(console,"%2x ",buf[i]);
+			printx(console,"\n");
+			wrefresh(console);
             version_extract(buf+CTRL_FRAME_MASK_DATA);
 
 
 		}else if(frame_type==CTRL_FRAME_TYPE_ERROR){
-			printf("----|warning :receive error information");
+			wattron(console,COLOR_PAIR(2));
+			printx(console,"----|warning :receive error information");
 			for(i=0;i<frame_info->frame_size;i++)
-			     printf("%2x ",buf[i]);
-			printf("\n");
+			     printx(console,"%2x ",buf[i]);
+			printx(console,"\n");
+			wattroff(console,COLOR_PAIR(2));
+			wrefresh(console);
 			error_parse(buf+CTRL_FRAME_MASK_DATA);
 
 		}else{
-			print_err("----|unsupported frame received\n");
+			wattron(console,COLOR_PAIR(2));
+			print_err(console,"----|unsupported frame received\n");
+			wattroff(console,COLOR_PAIR(2));
+			wrefresh(console);
 
 		}
 
@@ -304,16 +329,18 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             	     //if(1){
             		    // we have a valid CRC
                          if(frame_tail_err){
-                        	 print_debug("frame time :%d\n",*(uint32*)(buf+47));
+                        	 print_debug(console,"frame time :%d\n",*(uint32*)(buf+47));
+                        	 wrefresh(console);
                         	 frame_tail_err=0;
 
                          }
             		     return frame_info->frame_size;
             	     }else{
                         // invalid CRC ,remove the whole frame from the buffer
-
-                        print_debug("invalid crc frame,,frame time :%d\n",*(uint32*)(buf+47));
-
+            	    	 wattron(console,COLOR_PAIR(2));
+                        print_debug(console,"invalid crc frame,,frame time :%d\n",*(uint32*)(buf+47));
+                        wattroff(console,COLOR_PAIR(2));
+                        wrefresh(console);
             		    memmove(buf,buf+frame_info->frame_size,frame_info->bytes_received-frame_info->frame_size);
             	    	frame_info->bytes_received=frame_info->bytes_received-frame_info->frame_size;
             	    	frame_info->frame_size = 0;
@@ -327,10 +354,13 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             	     //we should have incorrectly detected a start of frame
                      //remove the 2 frame head bytes and start searching frame head again
                 	 frame_tail_err=1;
-                	 print_debug("ctrl :frame tail not found ,so the frame is invalid\n");
+                	 wattron(console,COLOR_PAIR(2));
+                	 print_debug(console,"ctrl :frame tail not found ,so the frame is invalid\n");
                 	 for(i=0;i<frame_info->bytes_received;i++)
-                		 printf("%2x ",buf[i]);
-                	 printf("\n");
+                		 printx(console,"%2x ",buf[i]);
+                	 printx(console,"\n");
+                	 wattroff(console,COLOR_PAIR(2));
+                	 wrefresh(console);
             	     memmove(buf,buf+2,frame_info->bytes_received-2);
             	     frame_info->bytes_received=frame_info->bytes_received-2;
             	     frame_info->frame_size = 0;
@@ -340,10 +370,13 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
             }else{
                 // invalid frame_size ,which means wrong frame head is detected
                  // we need to remove the 2 wrong frame head bytes
-            	 print_debug("ctrl :invalid frame_size \n");
+            	 wattron(console,COLOR_PAIR(2));
+            	 print_debug(console,"ctrl :invalid frame_size \n");
             	 for(i=0;i<frame_info->bytes_received;i++)
-            		 printf("%2x ",buf[i]);
-            	 printf("\n");
+            		 printx(console,"%2x ",buf[i]);
+            	 printx(console,"\n");
+            	 wattroff(console,COLOR_PAIR(2));
+            	 wrefresh(console);
                  memmove(buf,buf+2,frame_info->bytes_received-2);
                  frame_info->bytes_received=frame_info->bytes_received-2;
                  frame_info->frame_size = 0;
@@ -352,10 +385,13 @@ unsigned int serial_data_recv_ctrl(frame_info *frame_info ,unsigned char *buf)
        }else{
             //unable to find a valid start of frame
             //so check the last byte is FRAME_START1 in order to keep it for next time
-    	    print_debug("ctrl :invalid start of frame\n");
+    	    wattron(console,COLOR_PAIR(2));
+    	    print_debug(console,"ctrl :invalid start of frame\n");
        	    for(i=0;i<frame_info->bytes_received;i++)
-       		   printf("%2x ",buf[i]);
-       	    printf("\n");
+       		   printx(console,"%2x ",buf[i]);
+       	    printx(console,"\n");
+       	    wattroff(console,COLOR_PAIR(2));
+       	    wrefresh(console);
             if(buf[frame_info->bytes_received-1]==CTRL_FRAME_START1){
                 buf[0] = CTRL_FRAME_START1;
                 frame_info->bytes_received = 1;

@@ -1,6 +1,7 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <curses.h>
 
 #ifndef _DATA_TYPE_H
 #define _DATA_TYPE_H
@@ -14,8 +15,10 @@ typedef unsigned int uint32;
 typedef signed long long int64;
 typedef unsigned long long uint64;
 
-#define print_err printf
-#define print_debug printf
+#define print_err printx
+#define print_debug printx
+#define printx wprintw
+#define PI 3.1415926
 
 #define debug
 

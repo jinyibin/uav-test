@@ -1,4 +1,4 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,6 +9,8 @@
 
 #include "datatype.h"
 #include "serial.h"
+
+extern WINDOW *console;
 
 static int speed_arr[] = {B115200, B38400, B19200, B9600, B4800, B2400, B1200, B300,
 	B115200, B38400, B19200, B9600, B4800, B2400, B1200, B300,};
@@ -135,16 +137,16 @@ int serial_open(char *port_name, int speed,int vtime,int vmin)
 
 	fd = open(port_name, O_RDWR);
 	if (fd < 0) {
-		print_err("Failed to open %s\n", port_name);
+		print_err(console,"Failed to open %s\n", port_name);
 		return -1;
 	}
 	set_speed(fd, speed);
 	if (set_parity(fd, 8, 1,'N') < 0) {
-		print_err("Set Parity Error\n");
+		print_err(console,"Set Parity Error\n");
 		return -1;
 	}
     if(set_mode(fd,vmin,vtime)<0){
-		print_err("Set mode Error\n");
+		print_err(console,"Set mode Error\n");
 		return -1;
 	}
 	return fd;
