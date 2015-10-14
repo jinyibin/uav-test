@@ -218,6 +218,13 @@ int main( int argc,char *argv[])
 
         	continue;
         }
+
+        if(strcmp(command,"reset")==0){
+           	printx(console,"----|sending reset command... :\n");
+           	send_control_cmd(CTRL_FRAME_TYPE_RESET);
+
+        	continue;
+        }
         if(strcmp(command,"stop")==0){
             joystick_test=0;
         	continue;
@@ -297,11 +304,11 @@ void how_to_use()
   printx(console,"wp modify  : modify the way point,add data in the wp_modify.csv\n");
   printx(console,"             format:m_type,id,v,Long,lat,h,task\n");
   printx(console,"wp init    : initialize the way point,add data in the wp_ini.csv\n");
-  printx(console,"             format:id,v,Long,lat,h,task\n");
   printx(console,"firmware   : update the firmware\n");
   printx(console,"export     : export data\n");
   printx(console,"manual     : manual mode\n");
   printx(console,"ground ok  : ground ready to go\n");
+  printx(console,"reset      : reset\n");
   printx(console,"----------------------command list over--------------------------\n");
 
   wrefresh(console);

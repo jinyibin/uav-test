@@ -19,16 +19,46 @@ void show_pitch(WINDOW *win,float degree)
 {
 	int scale[11]={5,4,3,2,1,0,-1,-2,-3,-4,-5};
     int i=1;
-
+    int data;
+    data=(int)degree;
+    wclear(win);
     //calculate scale
-    scale[5]=(int)degree;
-    for(i=4;i>-1;i--){
-    	scale[i]=scale[i+1]+1;
-    }
-    for(i=6;i<11;i++){
-    	scale[i]=scale[i-1]-1;
-    }
+    if((data>-5)&&(data<5)){
+        for(i=0;i<11;i++){
+     	   if(scale[i]==data)
+     		   break;
+        }
+      	wattron(win,COLOR_PAIR(2)|A_BOLD);
+       	mvwprintw(win,2+i, 8," <--");
+       	mvwprintw(win,2+i, 2,"-->");
+       	    //waddch(win,ACS_DEGREE);
+       	wattroff(win,COLOR_PAIR(2)|A_BOLD);
 
+    }else if(data<=-5){
+        scale[10]=data;
+        for(i=9;i>-1;i--){
+     	   scale[i]=scale[i+1]+1;
+        }
+
+       	wattron(win,COLOR_PAIR(2)|A_BOLD);
+        mvwprintw(win,12, 8," <--");
+        mvwprintw(win,12, 2,"-->");
+        	    //waddch(win,ACS_DEGREE);
+        wattroff(win,COLOR_PAIR(2)|A_BOLD);
+
+
+    }else{
+        scale[0]=data;
+        for(i=1;i<11;i++){
+     	   scale[i]=scale[i-1]-1;
+        }
+       	wattron(win,COLOR_PAIR(2)|A_BOLD);
+        mvwprintw(win,2, 8," <--");
+        mvwprintw(win,2, 2,"-->");
+        	    //waddch(win,ACS_DEGREE);
+        wattroff(win,COLOR_PAIR(2)|A_BOLD);
+
+    }
     //draw window outline
     box(win, 0 ,0);
     //show window title
@@ -38,12 +68,6 @@ void show_pitch(WINDOW *win,float degree)
     //show degree value in red color
     wattron(win,COLOR_PAIR(2)|A_BOLD);
     mvwprintw(win,1, 10,"%3.1f",degree);
-    //waddch(win,ACS_DEGREE);
-    wattroff(win,COLOR_PAIR(2)|A_BOLD);
-
-    wattron(win,COLOR_PAIR(2)|A_BOLD);
-    mvwprintw(win,7, 8," <--");
-    mvwprintw(win,7, 2,"-->");
     //waddch(win,ACS_DEGREE);
     wattroff(win,COLOR_PAIR(2)|A_BOLD);
 
@@ -58,17 +82,48 @@ void show_roll(WINDOW *win,float degree)
 	int scale[11]={-5,-4,-3,-2,-1,0,1,2,3,4,5};
     int i=1;
     char s_string[4];
-
-    //calculate scale
-    scale[5]=(int)degree;
-    for(i=4;i>-1;i--){
-    	scale[i]=scale[i+1]-1;
-    }
-    for(i=6;i<11;i++){
-    	scale[i]=scale[i-1]+1;
-    }
+    int data;
     wclear(win);
     //wmove(other,0,0);
+    data=(int)degree;
+    //calculate scale
+    //calculate scale
+     if((data>-5)&&(data<5)){
+
+        for(i=0;i<11;i++){
+     	   if(scale[i]==data)
+     		   break;
+        }
+
+        wattron(win,COLOR_PAIR(4)|A_BOLD);
+        mvwprintw(win,2,2+i*4," ");
+        mvwprintw(win,4,2+i*4," ");
+        wattroff(win,COLOR_PAIR(4)|A_BOLD);
+
+     }else if(data<=-5){
+
+         scale[0]=data;
+         for(i=1;i<11;i++){
+      	   scale[i]=scale[i-1]+1;
+         }
+         wattron(win,COLOR_PAIR(4)|A_BOLD);
+         mvwprintw(win,2,2," ");
+         mvwprintw(win,4,2," ");
+         wattroff(win,COLOR_PAIR(4)|A_BOLD);
+
+
+     }else{
+         scale[10]=data;
+         for(i=9;i>-1;i--){
+      	   scale[i]=scale[i+1]-1;
+         }
+         wattron(win,COLOR_PAIR(4)|A_BOLD);
+         mvwprintw(win,2,42," ");
+         mvwprintw(win,4,42," ");
+         wattroff(win,COLOR_PAIR(4)|A_BOLD);
+
+     }
+
     //draw window outline
     box(win, 0 ,0);
     //show window title
@@ -80,12 +135,6 @@ void show_roll(WINDOW *win,float degree)
     mvwprintw(win,1,39,"%5.1f",degree);
     wattroff(win,COLOR_PAIR(3)|A_BOLD);
 
-    wattron(win,COLOR_PAIR(4)|A_BOLD);
-    mvwprintw(win,2,22," ");
-    mvwprintw(win,4,22," ");
-    wattroff(win,COLOR_PAIR(4)|A_BOLD);
-
-    //mvwprintw(win,3, 1,"-+---+---+---+---+---+---+---+---+---+---+-");
     for(i=0;i<11;i++){
     	sprintf(s_string,"%d",scale[i]);
         switch(strlen(s_string))
