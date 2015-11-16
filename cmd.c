@@ -35,7 +35,7 @@ void flying_status_parse(uint8 *data,flying_status_s *flying_status)
     flying_status->vx =  *(float*)(data +84);
     flying_status->vy =  *(float*)(data +88);
     flying_status->vz =  *(float*)(data +92);
-    flying_status->sonar_h =  *(float*)(data +96);
+    flying_status->sonar_h =  *(uint32*)(data +96);
     flying_status->waypoint_dest =  *(uint32*)(data +100);
     flying_status->pwm[0] = *(uint16*)(data+102);
     flying_status->pwm[1] = *(uint16*)(data+104);

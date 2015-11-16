@@ -349,7 +349,7 @@ void cockpit_display(flying_status_s *flying_status)
     show_heading(heading,flying_status->heading/100000);
     //wclear(other);
     //wmove(other,0,0);
-    mvwprintw(other,0,0,"Height_Baro:%7.3fm   Height_GPS :%7.3fm\n",(float)(flying_status->b_h)/1000,flying_status->g_h);
+    mvwprintw(other,0,0,"Height_Baro:%7.3fm   Height_GPS :%7.3fm\n",(float)(flying_status->b_h)/100,flying_status->g_h);
     mvwprintw(other,1,0,"Sonar      :%7.3fcm  Next_Destin:%5d\n",(float)(flying_status->sonar_h)/58,flying_status->waypoint_dest);
     mvwprintw(other,2,0,"Volt_Batter:%7.3fV   Temp_CPU   :%4dC\n",flying_status->voltage,flying_status->cpu_temp);
     mvwprintw(other,3,0,"Longitude:%12.8f  Latitude:%12.8f\n",flying_status->Long,flying_status->lat);
